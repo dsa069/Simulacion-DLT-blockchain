@@ -1,13 +1,16 @@
 from .block import Block
 from .merkle_tree import MerkleTree
 from .utils.timestamp import get_current_timestamp
+from .proof_of_work import ProofOfWork
 
 class Blockchain:
     def __init__(self):
         self.chain = []
-        self.create_block(previous_hash='000000000000000000000000000000000000000000000000000000000000000', nonce=0)  # Create the genesis block with leading zeros
+        genesis_block = self.create_block(previous_hash='000000000000000000000000000000000000000000000000000000000000000', nonce=0)
         
-    # Rest of the class remains the same
+        # Mine the genesis block
+        pow = ProofOfWork(difficulty=3)
+        pow.mine(genesis_block)
         
     def create_block(self, previous_hash, nonce, data=None):
         block = Block(
