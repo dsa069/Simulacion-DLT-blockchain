@@ -1,47 +1,55 @@
+from .block import Block
+from .merkle_tree import MerkleTree
+from .utils.timestamp import get_current_timestamp
+
 class Blockchain:
     def __init__(self):
         self.chain = []
-        self.current_transactions = []
-        self.create_block(previous_hash='1', nonce=0)  # Create the genesis block
-
-    def create_block(self, nonce, previous_hash):
+        self.create_block(previous_hash='000000000000000000000000000000000000000000000000000000000000000', nonce=0)  # Create the genesis block with leading zeros
+        
+    # Rest of the class remains the same
+        
+    def create_block(self, previous_hash, nonce, data=None):
         block = Block(
-            index=len(self.chain) + 1,
+            index=len(self.chain),
+            timestamp=get_current_timestamp(),
+            data=data if data else "Genesis Block",
             previous_hash=previous_hash,
-            timestamp=self.get_current_timestamp(),
-            data=self.current_transactions,
-            nonce=nonce,
-            merkle_root=self.calculate_merkle_root(self.current_transactions)
+            nonce=nonce
         )
-        self.current_transactions = []  # Reset the current transactions
         self.chain.append(block)
         return block
-
-    def append_block(self, data):
-        self.current_transactions.append(data)
-
-    def validate_chain(self):
-        for i in range(1, len(self.chain)):
-            current = self.chain[i]
-            previous = self.chain[i - 1]
-
-            if current.previous_hash != previous.hash:
-                return False
-
-            if not current.validate_block():
-                return False
-
-        return True
-
-    def get_current_timestamp(self):
-        from utils.timestamp import get_current_timestamp
-        return get_current_timestamp()
-
-    def calculate_merkle_root(self, transactions):
-        from merkle_tree import MerkleTree
-        merkle_tree = MerkleTree(transactions)
-        return merkle_tree.get_merkle_root()
-
+    
     @property
     def last_block(self):
-        return self.chain[-1] if self.chain else None
+        return self.chain[-1]
+    
+    def append_block(self, data):
+        previous_block = self.last_block
+        new_block = Block(
+            index=len(self.chain),
+            timestamp=get_current_timestamp(),
+            data=data,
+            previous_hash=previous_block.hash,
+            nonce=0
+        )
+        self.chain.append(new_block)
+        return new_block
+    
+    def is_chain_valid(self):
+        """
+        Check if the blockchain is valid by verifying each block's hash and previous_hash
+        """
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i-1]
+            
+            # Check if current block's hash is valid
+            if current_block.hash != current_block.calculate_hash():
+                return False
+                
+            # Check if current block's previous_hash points to previous block's hash
+            if current_block.previous_hash != previous_block.hash:
+                return False
+                
+        return True

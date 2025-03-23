@@ -1,17 +1,30 @@
+import hashlib
+import json
+from .merkle_tree import MerkleTree
+from .utils.timestamp import get_current_timestamp
+
 class Block:
-    def __init__(self, index, previous_hash, timestamp, data, nonce, merkle_root):
+    def __init__(self, index, timestamp, data, previous_hash, nonce=0):
         self.index = index
-        self.previous_hash = previous_hash
         self.timestamp = timestamp
         self.data = data
+        self.previous_hash = previous_hash
         self.nonce = nonce
-        self.merkle_root = merkle_root
+        self.merkle_tree = MerkleTree([data]) if data else MerkleTree(["Genesis"])
+        self.merkle_root = self.merkle_tree.get_root()
         self.hash = self.calculate_hash()
-
+        
     def calculate_hash(self):
-        import hashlib
-        block_string = f"{self.index}{self.previous_hash}{self.timestamp}{self.data}{self.nonce}{self.merkle_root}"
-        return hashlib.sha256(block_string.encode()).hexdigest()
-
-    def __repr__(self):
-        return f"Block(Index: {self.index}, Hash: {self.hash}, Previous Hash: {self.previous_hash})"
+        block_string = json.dumps({
+            "index": self.index,
+            "timestamp": self.timestamp,
+            "data": self.data,
+            "previous_hash": self.previous_hash,
+            "nonce": self.nonce,
+            "merkle_root": self.merkle_root
+        }, sort_keys=True).encode()
+        
+        return hashlib.sha256(block_string).hexdigest()
+        
+    def update_hash(self):
+        self.hash = self.calculate_hash()

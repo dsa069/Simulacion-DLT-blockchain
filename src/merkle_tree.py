@@ -1,27 +1,42 @@
+import hashlib
+import json
+
 class MerkleTree:
     def __init__(self, transactions):
         self.transactions = transactions
-        self.root = self.build_tree(transactions)
-
-    def build_tree(self, transactions):
-        if len(transactions) == 0:
+        self.tree = self.build_tree()
+        
+    def build_tree(self):
+        # Convert transactions to hash strings
+        leaves = [self.hash_transaction(tx) for tx in self.transactions]
+        
+        # Ensure even number of leaves by duplicating the last one if needed
+        if len(leaves) % 2 == 1:
+            leaves.append(leaves[-1])
+            
+        # Build the tree
+        tree = [leaves]
+        while len(tree[-1]) > 1:
+            level = []
+            for i in range(0, len(tree[-1]), 2):
+                if i + 1 < len(tree[-1]):
+                    level.append(self.hash_pair(tree[-1][i], tree[-1][i+1]))
+                else:
+                    level.append(tree[-1][i])
+            tree.append(level)
+            
+        return tree
+        
+    def hash_transaction(self, transaction):
+        # Convert transaction to a hash
+        return hashlib.sha256(json.dumps(transaction, sort_keys=True).encode()).hexdigest()
+        
+    def hash_pair(self, left, right):
+        # Concatenate and hash the pair
+        concat = left + right
+        return hashlib.sha256(concat.encode()).hexdigest()
+        
+    def get_root(self):
+        if not self.tree or not self.tree[-1]:
             return None
-        elif len(transactions) == 1:
-            return self.hash(transactions[0])
-
-        # Hash the transactions in pairs
-        hashed_pairs = []
-        for i in range(0, len(transactions), 2):
-            if i + 1 < len(transactions):
-                hashed_pairs.append(self.hash(transactions[i] + transactions[i + 1]))
-            else:
-                hashed_pairs.append(self.hash(transactions[i]))
-
-        return self.build_tree(hashed_pairs)
-
-    def hash(self, data):
-        import hashlib
-        return hashlib.sha256(data.encode()).hexdigest()
-
-    def get_merkle_root(self):
-        return self.root
+        return self.tree[-1][0]

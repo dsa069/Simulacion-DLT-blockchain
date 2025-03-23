@@ -1,34 +1,33 @@
-from datetime import datetime
+import sys
+import os
 import random
+# Add the parent directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from src.blockchain import Blockchain
 from src.proof_of_work import ProofOfWork
+from src.merkle_tree import MerkleTree
 from src.utils.timestamp import get_current_timestamp
 
 def create_transaction(data):
     blockchain = Blockchain()
-    proof_of_work = ProofOfWork()
+    proof_of_work = ProofOfWork(difficulty=3)  # Specify difficulty
 
-    # Create a new block with the transaction data
-    timestamp = get_current_timestamp()
-    nonce = random.randint(0, 1000000)  # Random nonce for demonstration
-    previous_hash = blockchain.get_last_block().hash if blockchain.chain else '0' * 64
-
-    # Create the Merkle tree and get the Merkle root
-    merkle_tree = MerkleTree([data])
-    merkle_root = merkle_tree.get_merkle_root()
-
-    # Append the new block to the blockchain
-    new_block = blockchain.append_block(data, previous_hash, timestamp, nonce, merkle_root)
-
+    # Add transaction to blockchain
+    blockchain.append_block(data)
+    
+    # Get the last block
+    last_block = blockchain.last_block
+    
     # Perform proof of work
-    proof_of_work.mine(new_block)
+    proof_of_work.mine(last_block)
 
-    print(f"Block {new_block.index} has been added to the blockchain!")
-    print(f"Hash: {new_block.hash}")
-    print(f"Previous Hash: {previous_hash}")
-    print(f"Timestamp: {timestamp}")
-    print(f"Nonce: {nonce}")
-    print(f"Merkle Root: {merkle_root}")
+    print(f"Block {last_block.index} has been added to the blockchain!")
+    print(f"Hash: {last_block.hash}")
+    print(f"Previous Hash: {last_block.previous_hash}")
+    print(f"Timestamp: {last_block.timestamp}")
+    print(f"Nonce: {last_block.nonce}")
+    print(f"Merkle Root: {last_block.merkle_root}")
 
 if __name__ == "__main__":
     transaction_data = "Sample transaction data"
