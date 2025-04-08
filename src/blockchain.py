@@ -38,21 +38,3 @@ class Blockchain:
         )
         self.chain.append(new_block)
         return new_block
-    
-    def is_chain_valid(self):
-        """
-        Check if the blockchain is valid by verifying each block's hash and previous_hash
-        """
-        for i in range(1, len(self.chain)):
-            current_block = self.chain[i]
-            previous_block = self.chain[i-1]
-            
-            # Check if current block's hash is valid
-            if current_block.hash != current_block.calculate_hash():
-                return False
-                
-            # Check if current block's previous_hash points to previous block's hash
-            if current_block.previous_hash != previous_block.hash:
-                return False
-                
-        return True

@@ -2,7 +2,6 @@ import sys
 import os
 import json
 import glob
-from collections import deque
 # Add the parent directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -232,6 +231,40 @@ def print_subtree(blocks, block_hash, prefix, is_last):
     if block["right_child"]:
         print_subtree(blocks, block["right_child"], child_prefix, True)
 
+def find_highest_block_index(folder="dlt_tree"):
+    """Find the highest block index in the dlt folder"""
+    # Original implementation is fine for this purpose
+    if not os.path.exists(folder):
+        return -1
+        
+    # Get all block files
+    block_files = glob.glob(f"{folder}/block_*.json")
+    
+    if not block_files:
+        return -1
+        
+    # Extract indices from filenames
+    indices = []
+    for file in block_files:
+        try:
+            # Format is block_INDEX_HASH.json
+            parts = os.path.basename(file).split('_')
+            if len(parts) >= 2:
+                indices.append(int(parts[1]))
+        except (ValueError, IndexError):
+            pass
+            
+    return max(indices) if indices else -1
+
+def print_block_info(block):
+    print(f"Block {block.index} has been added to the blockchain!")
+    print(f"Hash: {block.hash}")
+    print(f"Previous Hash: {block.previous_hash}")
+    print(f"Timestamp: {block.timestamp}")
+    print(f"Nonce: {block.nonce}")
+    print(f"Merkle Root: {block.merkle_root}")
+    print(f"Data: {block.data}")
+
 def add_single_transaction(transaction_data):
     """Add a single transaction to the blockchain tree"""
     folder = "dlt_tree"
@@ -296,40 +329,6 @@ def add_single_transaction(transaction_data):
     # Print the tree structure
     print_blockchain_tree(folder)
     print(f"\nTransaction has been added to the blockchain tree and saved to {folder}")
-
-def find_highest_block_index(folder="dlt_tree"):
-    """Find the highest block index in the dlt folder"""
-    # Original implementation is fine for this purpose
-    if not os.path.exists(folder):
-        return -1
-        
-    # Get all block files
-    block_files = glob.glob(f"{folder}/block_*.json")
-    
-    if not block_files:
-        return -1
-        
-    # Extract indices from filenames
-    indices = []
-    for file in block_files:
-        try:
-            # Format is block_INDEX_HASH.json
-            parts = os.path.basename(file).split('_')
-            if len(parts) >= 2:
-                indices.append(int(parts[1]))
-        except (ValueError, IndexError):
-            pass
-            
-    return max(indices) if indices else -1
-
-def print_block_info(block):
-    print(f"Block {block.index} has been added to the blockchain!")
-    print(f"Hash: {block.hash}")
-    print(f"Previous Hash: {block.previous_hash}")
-    print(f"Timestamp: {block.timestamp}")
-    print(f"Nonce: {block.nonce}")
-    print(f"Merkle Root: {block.merkle_root}")
-    print(f"Data: {block.data}")
 
 if __name__ == "__main__":
     # Get transaction data from user input
